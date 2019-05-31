@@ -1,5 +1,6 @@
 #pragma once
 #include "sensor.h"
+#include <atlstr.h>
 //---------------------------------------------------------------
 class CSensorNetwork : public CSensor
 {
@@ -29,6 +30,7 @@ private:
 	ULONG64			m_network_transmitted = 0;
 	LONGLONG		m_network_time_pctick = 0;	//time of last measure of network utilization in performance counter ticks
 	double			m_counter_frequency = 0;	//Performance counter frequency
+	CString			m_name;
 };
 //---------------------------------------------------------------
 //---------------------------------------------------------------

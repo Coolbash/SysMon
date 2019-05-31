@@ -5,16 +5,16 @@
 #include <algorithm>
 
 //---------------------------------------------------------------
-class CiniReader : public std::ifstream
+class CiniReader : public std::ifstream		///small utility class for reading ini-file liny-by-line
 {
-	std::string line; //current line
+	std::string line;	///current line
 public:
-	std::string name;	//name of the current line
-	std::string value;  //value of the current line
-	bool section = false; //current line is a section. 
-	
+	std::string name;	///name of the current line
+	std::string value;  ///value of the current line
+	bool section = false; ///current line is a section. 
+	//--------------------------
 	CiniReader(LPCSTR name) :std::ifstream(name) {};//constructor
-	
+	//--------------------------
 	bool get_next_line()
 	{
 		while (std::getline(*this, line))
@@ -23,10 +23,8 @@ public:
 			if (line.empty() || line[0] == ';' || line[0] == '#') 
 				continue;
 			if (line[0] == '[' && line[line.size() - 1] == ']')
-			{
-				name = std::string(line.begin() + 1, line.end() - 1);
-				section = true;
-			}else
+				name = std::string(line.begin() + 1, line.end() - 1), section = true;
+			else
 			{
 				auto delimiterPos = line.find("=");
 				name = line.substr(0, delimiterPos);
@@ -61,7 +59,7 @@ bool CsensorManager::parse_ini()
 			read_ini_section(reader);
 
 		if (reader.name == ini_interval)
-			m_inteval = std::stoi(reader.value);
+			m_inteval_ms = std::stoi(reader.value);
 		else
 			if (reader.name == ini_sensor_heigh)
 				m_pViewer->m_sensor_cy = std::stoi(reader.value);
@@ -160,8 +158,7 @@ bool	CsensorManager::add_sensor_disk(CiniReader& reader)
 					if (reader.name == ini_directory)
 						pSensor->init(CString(reader.value.c_str()));
 		}
-	}
-	else
+	}else
 		return false;
 	return true;
 }
@@ -183,12 +180,10 @@ bool	CsensorManager::add_sensor_network(CiniReader& reader)
 				else
 					if (reader.name == ini_threshold_warning)
 						pSensor->m_threshold_warning = std::stoi(reader.value) / 100.;
+				//it would be nice to read adapter LUID from config file
 			}
-		}
-		else return false;
-	}
-	else
-		return false;
+		}else return false;
+	}else return false;
 	return true;
 }
 //---------------------------------------------------------------
@@ -213,10 +208,8 @@ bool CsensorManager::init_default()
 		{
 			m_sensors.push_back(pSensor);
 			if (pSensor->init())
-			{
 				m_pViewer->add_sensor(pSensor);
-				pSensor->set_thresholds(.5, .9);
-			}else return false;
+			else return false;
 		}else return false;
 	}
 	
@@ -226,9 +219,7 @@ bool CsensorManager::init_default()
 		{
 			m_sensors.push_back(pSensor);
 			m_pViewer->add_sensor(pSensor);
-			pSensor->set_thresholds(.5, .9);
-		}
-		else return false;
+		}else return false;
 	}
 
 	{//disk
@@ -236,14 +227,10 @@ bool CsensorManager::init_default()
 		if (pSensor)
 		{
 			m_sensors.push_back(pSensor);
-			if (pSensor->init(_T("c:")))
-			{
+			if (pSensor->init(_T("c:\\")))
 				m_pViewer->add_sensor(pSensor);
-				pSensor->set_thresholds(.5, .9);
-			}
 			else return false;
-		}
-		else return false;
+		}else return false;
 	}
 
 	{//network
@@ -251,14 +238,10 @@ bool CsensorManager::init_default()
 		if (pSensor)
 		{
 			m_sensors.push_back(pSensor);
-			if (pSensor->init())		//it's good to put here adapter LUID from config file
-			{
+			if (pSensor->init())		
 				m_pViewer->add_sensor(pSensor);
-				pSensor->set_thresholds(.5, .9);
-			}
 			else return false;
-		}
-		else return false;
+		}else return false;
 	}
 	return true;
 }
@@ -296,7 +279,7 @@ void	CsensorManager::thread_worker()
 
 		if (m_pViewer)
 			m_pViewer->update();
-		Sleep(m_inteval);
+		Sleep(m_inteval_ms);
 	}
 }
 
@@ -348,7 +331,6 @@ void	CsensorManager::show_notification()
 	}
 	if(!m_szNotification.IsEmpty())
 		m_thread_message = std::thread(&CsensorManager::thread_message, this);
-
 }
 //---------------------------------------------------------------
 

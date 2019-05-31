@@ -113,7 +113,7 @@ void CViewMem::draw(HDC hdc)
 {
 	m_bar.draw(hdc, m_sensor.value());
 	CString		s;
-	s.Format(_T("Memory:\nused%s of %s"), 
+	s.Format(_T("Memory:\navailable %s of %s"), 
 		btos(m_sensor.available()).GetString(), 
 		btos(m_sensor.total()).GetString());
 	DrawText(hdc, s.GetString(), -1, &m_rect_text, DT_LEFT);

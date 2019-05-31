@@ -33,8 +33,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Place code here.
-
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_SYSMON, szWindowClass, MAX_LOADSTRING);
@@ -42,29 +40,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Perform application initialization:
     if (!InitInstance (hInstance, nCmdShow))
-    {
         return FALSE;
-    }
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SYSMON));
 
-    MSG msg;
-
     // Main message loop:
+    MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))
-    {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-    }
 
     return (int) msg.wParam;
 }
 //---------------------------------------------------------------
-
-
 
 //
 //  FUNCTION: MyRegisterClass()
@@ -111,9 +102,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED | WS_SYSMENU /*| WS_MINIMIZEBOX*/, CW_USEDEFAULT, 0, 600, 300, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
-   {
       return FALSE;
-   }
+
    if (sensorManager.init(&sensorViewer) && sensorViewer.init(hWnd))
    {
 		ShowWindow(hWnd, nCmdShow);

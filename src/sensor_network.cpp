@@ -3,21 +3,29 @@
 #include "sensor_network.h"
 #include <algorithm>
 
-//network traffic includes and libraries:
-//#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <Iphlpapi.h>
 #pragma comment(lib, "iphlpapi.lib")
 
-
 //---------------------------------------------------------------
 LPCTSTR	CSensorNetwork::name()
 {
-	return _T("Network utilization");
+	return m_name.GetString();
 }
 //---------------------------------------------------------------
 const bool CSensorNetwork::init()
 {
+	//-----------------------
+	auto init_from_ifRow = [this](MIB_IF_ROW2& ifRow)
+	{ 
+		m_network_adapter_luid = ifRow.InterfaceLuid.Value;
+		m_transmit_link_speed_bitPsec = ifRow.TransmitLinkSpeed;
+		m_receive_link_speed_bitPsec = ifRow.ReceiveLinkSpeed;
+		m_network_received = ifRow.InOctets;
+		m_network_transmitted = ifRow.OutOctets;
+		m_name.Format(_T("Network utilization of adapter\n%s\n"), ifRow.Alias);
+	};
+	//-----------------------
 	LARGE_INTEGER perf_frequency;
 	if (QueryPerformanceFrequency(&perf_frequency))
 		m_counter_frequency = double(perf_frequency.QuadPart);
@@ -36,14 +44,10 @@ const bool CSensorNetwork::init()
 				if (ifRow.InterfaceAndOperStatusFlags.HardwareInterface &&
 					ifRow.MediaConnectState == MediaConnectStateConnected &&
 					ifRow.ReceiveLinkSpeed || ifRow.TransmitLinkSpeed)
-					{
-						m_network_adapter_luid	= ifRow.InterfaceLuid.Value;
-						m_transmit_link_speed_bitPsec = ifRow.TransmitLinkSpeed;
-						m_receive_link_speed_bitPsec	= ifRow.ReceiveLinkSpeed;
-						m_network_received		= ifRow.InOctets;
-						m_network_transmitted	= ifRow.OutOctets;
-						break;
-					}
+				{
+					init_from_ifRow(ifRow);
+					break;
+				}
 			}
 			FreeMibTable(table);
 		}else return false;
@@ -51,16 +55,10 @@ const bool CSensorNetwork::init()
 	{
 		MIB_IF_ROW2 ifRow = { m_network_adapter_luid };
 		if (NO_ERROR == GetIfEntry2(&ifRow))
-		{
-			m_network_adapter_luid = ifRow.InterfaceLuid.Value;
-			m_transmit_link_speed_bitPsec = ifRow.TransmitLinkSpeed;
-			m_receive_link_speed_bitPsec = ifRow.ReceiveLinkSpeed;
-			m_network_received = ifRow.InOctets;
-			m_network_transmitted = ifRow.OutOctets;
-		}else
+			init_from_ifRow(ifRow);
+		else
 			return false;
 	}
-
 	return true;
 }
 //---------------------------------------------------------------
