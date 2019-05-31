@@ -74,11 +74,11 @@ bool CViewCPU::init()
 {
 	if (m_rect.right != 0)
 	{
-		LONG x = m_rect.left;
+		LONG x = m_rect.left+margin;
 		m_bars.resize(m_sensor.cores());
 		for (auto& bar : m_bars)
 		{
-			bar.init(x + margin, m_rect.top + margin, bar_weight, m_rect.bottom - m_rect.top - 2*margin, RGB(150, 255, 150));
+			bar.init(x+1, m_rect.top + margin, bar_weight, m_rect.bottom - m_rect.top - 2*margin, RGB(150, 255, 150));
 			x = bar.m_rect.right;
 		}
 		m_rect_text.left = x + margin;
@@ -149,7 +149,7 @@ bool CViewNetwork::init()
 	if (m_rect.right != 0)
 	{
 		m_bar_sent.		init(m_rect.left + margin, m_rect.top + margin, bar_weight, m_rect.bottom - m_rect.top - 2 * margin, RGB(255, 200, 150));
-		m_bar_received.	init(m_bar_sent.m_rect.right + margin, m_rect.top + margin, bar_weight, m_rect.bottom - m_rect.top - 2 * margin, RGB(200, 255, 150));
+		m_bar_received.	init(m_bar_sent.m_rect.right + 1, m_rect.top + margin, bar_weight, m_rect.bottom - m_rect.top - 2 * margin, RGB(200, 255, 150));
 		m_rect_text.left = m_bar_received.m_rect.right + margin;
 		return true;
 	}
