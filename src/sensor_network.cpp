@@ -43,7 +43,9 @@ const bool CSensorNetwork::init()
 				MIB_IF_ROW2& ifRow = table->Table[i];
 				if (ifRow.InterfaceAndOperStatusFlags.HardwareInterface &&
 					ifRow.MediaConnectState == MediaConnectStateConnected &&
-					ifRow.ReceiveLinkSpeed || ifRow.TransmitLinkSpeed)
+					ifRow.ReceiveLinkSpeed && 
+					ifRow.InOctets)
+
 				{
 					init_from_ifRow(ifRow);
 					break;
