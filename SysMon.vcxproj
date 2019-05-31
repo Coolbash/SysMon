@@ -181,11 +181,24 @@
   <ItemGroup>
     <ClInclude Include="src/framework.h" />
     <ClInclude Include="res/Resource.h" />
-    <ClInclude Include="src/SysMon.h" />
     <ClInclude Include="src/targetver.h" />
+    <ClInclude Include="src\sensor.h" />
+    <ClInclude Include="src\sensorManager.h" />
+    <ClInclude Include="src\sensor_CPU.h" />
+    <ClInclude Include="src\sensor_disk.h" />
+    <ClInclude Include="src\sensor_mem.h" />
+    <ClInclude Include="src\sensor_network.h" />
+    <ClInclude Include="src\SysMonApp.h" />
+    <ClInclude Include="src\SysMonView.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src/SysMon.cpp" />
+    <ClCompile Include="src\sensorManager.cpp" />
+    <ClCompile Include="src\sensor_CPU.cpp" />
+    <ClCompile Include="src\sensor_disk.cpp" />
+    <ClCompile Include="src\sensor_mem.cpp" />
+    <ClCompile Include="src\sensor_network.cpp" />
+    <ClCompile Include="src\SysMonApp.cpp" />
+    <ClCompile Include="src\SysMonView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res/SysMon.rc" />
@@ -193,6 +206,9 @@
   <ItemGroup>
     <Image Include="res/small.ico" />
     <Image Include="res/SysMon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SysMon.ini" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
