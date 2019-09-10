@@ -9,23 +9,24 @@ LPCTSTR	CSensorCPU::name()
 //---------------------------------------------------------------
 const bool CSensorCPU::init()
 {
-	//FIXME: here is memory allocation. Put me in try/catch.
 	QueryIdleProcessorCycleTime(&m_CPU_idle_size, nullptr);
 	if (m_CPU_idle_size)
 	{
-		m_cores.resize(m_CPU_idle_size / sizeof ULONG64);
-		m_pCPU_idle = std::make_unique<ULONG64[]>(m_cores.size());
+		const int nCores = m_CPU_idle_size / sizeof ULONG64;
+		m_cores.reserve(nCores);
+		if(m_cores.capacity()>=nCores)
 		{
-			m_CPU_ticks = __rdtsc();
-			if (QueryIdleProcessorCycleTime(&m_CPU_idle_size, m_pCPU_idle.get()))
+			m_cores.resize(nCores);
+			if(m_pCPU_idle = std::make_unique<ULONG64[]>(m_cores.size()))
 			{
-				ULONG64* pCur{ m_pCPU_idle.get() };
-				for (auto& core : m_cores)
+				m_CPU_ticks = __rdtsc();
+				if (QueryIdleProcessorCycleTime(&m_CPU_idle_size, m_pCPU_idle.get()))
 				{
-					core.m_idle_prev = *pCur;
-					++pCur;
+					ULONG64* pCur{ m_pCPU_idle.get() };
+					for (auto& core : m_cores)
+						core.m_idle_prev = *(pCur++);
+					return true;
 				}
-				return true;
 			}
 		}
 	}
