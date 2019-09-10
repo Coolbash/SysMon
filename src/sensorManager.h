@@ -6,6 +6,7 @@
 #include <atlstr.h>
 #include <thread>
 #include <vector>
+#include <memory>
 
 //---------------------------------------------------------------
 class	CiniReader;
@@ -20,7 +21,7 @@ public:
 private:
 	CclientViewer*				m_pViewer=nullptr;		///a viewer to draw sensor data
 	bool						m_bRun = false;
-	std::vector<CSensor*>		m_sensors;
+	std::vector<std::unique_ptr<CSensor>>		m_sensors;
 	std::thread					m_thread_worker;	///a background working thread that checks all sensors and shows notifications
 	std::thread					m_thread_message;	///different thread for notification window
 	CString						m_szNotification;	///user notification text

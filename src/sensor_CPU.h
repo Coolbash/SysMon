@@ -1,24 +1,28 @@
 #pragma once
 #include "sensor.h"
+#include <vector>
+#include <memory>
 //---------------------------------------------------------------
 class CSensorCPU : public CSensor
 {
 public:
-	~CSensorCPU();
+	struct core_t
+	{
+		ULONG64 m_idle_prev = 0;
+		double	m_utilization =0;
+	};
+	using cores_t = std::vector<core_t>;
 	const bool		init();
 	virtual void	read() override;
-	const int		cores() const { return m_nCPU_cores; };	///return CPU cores quantity
-	const double*	value_by_cores() const { return m_pCPU_utilization; };///returns CPU utilization for each core
-	virtual LPCTSTR	name() override;			///name of the sensor (for notification)
+	const cores_t	data() const { return m_cores; }
+	const int		cores() const { return m_cores.size(); };	///< returns CPU cores quantity
+	virtual LPCTSTR	name() override;			///< name of the sensor (for notification)
 
 private:
-	int			m_nCPU_cores = 0;		///quantity of CPU cores
-	ULONG64*	m_pCPU_idle = nullptr;
+	cores_t		m_cores;
+	std::unique_ptr<ULONG64[]> m_pCPU_idle;
 	ULONG		m_CPU_idle_size = 0;	
-	ULONG64		m_CPU_ticks = 0;		///CPU tick counter in time of last read
-	ULONG64*	m_pCPU_idle_prev = nullptr;
-	double*		m_pCPU_utilization = nullptr;
-
+	ULONG64		m_CPU_ticks = 0;		///< CPU tick counter in time of last read
 };
 
 //---------------------------------------------------------------

@@ -1,17 +1,18 @@
 #pragma once
 #include <thread>
+#include <memory>
+#include <vector>
+#include <mutex>
 #include "sensor_CPU.h"
 #include "sensor_disk.h"
 #include "sensor_network.h"
-#include <vector>
-#include <mutex>
 
 //---------------------------------------------------------------
-class CBar	///simple vertical bar for showing percentage
+class CBar	///< simple vertical bar for showing percentage
 {
 public:
 	~CBar() { done(); };
-	void draw(HDC hdc, double value);	/// value must be floating point (0..1). Not percents. Background brush and outline pen must be selected in the DC.
+	void draw(HDC hdc, double value);	///< value must be floating point (0..1). Not percents. Background brush and outline pen must be selected in the DC.
 	void init(LONG left, LONG top, LONG cx, LONG cy, COLORREF color);
 
 	RECT		m_rect = { 0 };
@@ -20,20 +21,20 @@ private:
 	void		done();
 };
 //---------------------------------------------------------------
-class CsensorViewer	///abstract parent for all sensor viewers
+class CsensorViewer	///< abstract parent for all sensor viewers
 {
 public:
-	virtual			~CsensorViewer() {};	///destructor must be virtual for proper destructing all objects
+	virtual			~CsensorViewer()=default;	///< destructor must be virtual for proper destructing all objects
 	virtual void	draw(HDC hdc)=0;
 	virtual bool	init() = 0;
 	void			setRect(LONG left, LONG top, LONG cx, LONG cy);
 
 protected:
-	RECT		m_rect = { 0 };	/// a rect for whole viewer
-	RECT		m_rect_text = { 0 }; ///a rect for text
+	RECT		m_rect = { 0 };	///< a rect for whole viewer
+	RECT		m_rect_text = { 0 }; ///< a rect for text
 };
 //---------------------------------------------------------------
-class CViewCPU : public CsensorViewer	///viewer for CPU-sensor
+class CViewCPU : public CsensorViewer	///< viewer for CPU-sensor
 {
 public:
 	CViewCPU(const CSensorCPU& sensor) : m_sensor(sensor) {};	///sensor must be set in constructor
@@ -81,14 +82,6 @@ private:
 	CBar			m_bar_received;
 };
 //---------------------------------------------------------------
-#define ADD_SENSOR(sensor_t, viewer_t) \
-void	add_sensor(sensor_t* pSensor) \
-{\
-	auto* viewer = new viewer_t(*pSensor);\
-	if (viewer)\
-		m_sensor_veiwers.push_back(viewer);\
-};
-//---------------------------------------------------------------
 class CclientViewer	///class for incapsulating all sensor-viewers in client area
 {
 public:
@@ -97,6 +90,29 @@ public:
 	void	draw(HDC hdc);
 	void	update();
 	void	done();
+
+
+//void	add_sensor(CSensorCPU* pSensor)
+//{
+//	m_sensor_veiwers.push_back(std::make_unique<CViewCPU>(*pSensor));
+//};
+
+//template<typename TSensor, typename TViewer>
+//void	add_sensor(TSensor* pSensor)
+//{
+//	m_sensor_veiwers.push_back(std::make_unique<TViewer>(*pSensor));
+//};
+
+
+
+#define ADD_SENSOR(sensor_t, viewer_t) \
+void	add_sensor(sensor_t* pSensor) \
+{\
+		m_sensor_veiwers.push_back(std::make_unique<viewer_t>(*pSensor));\
+};
+//---------------------------------------------------------------
+
+	//void add_sensor(CSensorCPU)
 
 	ADD_SENSOR(CSensorCPU, CViewCPU);
 	ADD_SENSOR(CSensorMemory, CViewMem);
@@ -109,8 +125,9 @@ public:
 private:
 	HWND						m_hWnd = NULL;				///a window to draw in
 	bool						m_bRun = false;
-	std::vector<CsensorViewer*>		m_sensor_veiwers;
+	std::vector<std::unique_ptr<CsensorViewer>>	m_sensor_veiwers;
 	std::mutex					m_mutex;
+	
 
 };
 //---------------------------------------------------------------

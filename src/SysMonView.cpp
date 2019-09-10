@@ -90,8 +90,11 @@ bool CViewCPU::init()
 //---------------------------------------------------------------
 void CViewCPU::draw(HDC hdc)
 {
-	for (int i = 0; i < m_sensor.cores(); i++)
-		m_bars[i].draw(hdc, m_sensor.value_by_cores()[i]);
+	{
+		auto bar = m_bars.begin();
+		for (auto &core : m_sensor.data())
+			(bar++)->draw(hdc, core.m_utilization);
+	}
 	CString		s;
 	s.Format(_T("CPU %d%%"), m_sensor.value_percents());
 	DrawText(hdc, s.GetString(), -1, &m_rect_text, DT_LEFT );
@@ -182,8 +185,6 @@ void CViewNetwork::draw(HDC hdc)
 void CclientViewer::done()
 {
 	LOCK(m_mutex);
-	for (auto& viewer : m_sensor_veiwers)
-		delete viewer, viewer=nullptr;
 	m_sensor_veiwers.clear();
 }
 
@@ -238,6 +239,7 @@ void CclientViewer::update()
 			ReleaseDC(m_hWnd, hdc);
 		}
 	}
+	
 }
 //---------------------------------------------------------------
 

@@ -96,13 +96,11 @@ void	CsensorManager::read_ini_section(CiniReader& reader)
 //---------------------------------------------------------------
 bool	CsensorManager::add_sensor_CPU(CiniReader& reader)
 {
-	auto pSensor = new CSensorCPU;
-	if (pSensor)
+	if (auto pSensor{ std::make_unique<CSensorCPU>() })
 	{
-		m_sensors.push_back(pSensor);
 		if (pSensor->init())
 		{
-			m_pViewer->add_sensor(pSensor);
+			m_pViewer->add_sensor(pSensor.get());
 			//reading sensor settings from config
 			while (reader.get_next_line() && !reader.section)
 			{
@@ -112,20 +110,17 @@ bool	CsensorManager::add_sensor_CPU(CiniReader& reader)
 					if (reader.name == ini_threshold_warning)
 						pSensor->m_threshold_warning = std::stoi(reader.value) / 100.;
 			}
-		}
-		else return false;
-	}else 
-		return false;
-	return true;
+			m_sensors.push_back(std::move(pSensor));
+			return true;
+		};
+	};
+	return false;
 }
 //---------------------------------------------------------------
 bool	CsensorManager::add_sensor_mem(CiniReader& reader)
 {
-	auto pSensor = new CSensorMemory;
-	if (pSensor)
+	if (auto pSensor{ std::make_unique<CSensorMemory>() })
 	{
-		m_sensors.push_back(pSensor);
-		m_pViewer->add_sensor(pSensor);
 		//reading sensor settings from config
 		while (reader.get_next_line() && !reader.section)
 		{
@@ -135,18 +130,18 @@ bool	CsensorManager::add_sensor_mem(CiniReader& reader)
 				if (reader.name == ini_threshold_warning)
 					pSensor->m_threshold_warning = std::stoi(reader.value) / 100.;
 		}
-	}else
-		return false;
-	return true;
+		m_pViewer->add_sensor(pSensor.get());
+		m_sensors.push_back(std::move(pSensor));
+		return true;
+	};
+	return false;
 }
 //---------------------------------------------------------------
 bool	CsensorManager::add_sensor_disk(CiniReader& reader)
 {
-	auto pSensor = new CSensorDisk;
-	if (pSensor)
+	if (auto pSensor{ std::make_unique <CSensorDisk>() })
 	{
-		m_sensors.push_back(pSensor);
-		m_pViewer->add_sensor(pSensor);
+		m_pViewer->add_sensor(pSensor.get());
 		while (reader.get_next_line() && !reader.section)
 		{
 			if (reader.name == ini_threshold_error)
@@ -158,20 +153,19 @@ bool	CsensorManager::add_sensor_disk(CiniReader& reader)
 					if (reader.name == ini_directory)
 						pSensor->init(CString(reader.value.c_str()));
 		}
-	}else
-		return false;
-	return true;
+		m_sensors.push_back(std::move(pSensor));
+		return true;
+	};
+	return false;
 }
 //---------------------------------------------------------------
 bool	CsensorManager::add_sensor_network(CiniReader& reader)
 {
-	auto pSensor = new CSensorNetwork;
-	if (pSensor)
+	if (auto pSensor{ std::make_unique <CSensorNetwork>() })
 	{
-		m_sensors.push_back(pSensor);
 		if (pSensor->init())
 		{
-			m_pViewer->add_sensor(pSensor);
+			m_pViewer->add_sensor(pSensor.get());
 			//reading sensor settings from config
 			while (reader.get_next_line() && !reader.section)
 			{
@@ -182,9 +176,11 @@ bool	CsensorManager::add_sensor_network(CiniReader& reader)
 						pSensor->m_threshold_warning = std::stoi(reader.value) / 100.;
 				//it would be nice to read adapter LUID from config file
 			}
-		}else return false;
-	}else return false;
-	return true;
+			m_sensors.push_back(move(pSensor));
+			return true;
+		}
+	}
+	return false;
 }
 //---------------------------------------------------------------
 bool CsensorManager::init(CclientViewer* viewer)
@@ -202,56 +198,38 @@ bool CsensorManager::init(CclientViewer* viewer)
 //---------------------------------------------------------------
 bool CsensorManager::init_default()
 {
-	{//CPU 
-		auto pSensor = new CSensorCPU;
-		if (pSensor)
+	if (auto pSensor{ std::make_unique<CSensorCPU>() })//CPU 
+		if (pSensor->init())
 		{
-			m_sensors.push_back(pSensor);
-			if (pSensor->init())
-				m_pViewer->add_sensor(pSensor);
-			else return false;
-		}else return false;
-	}
+			m_pViewer->add_sensor(pSensor.get());
+			m_sensors.push_back(std::move(pSensor));
+		};
 	
-	{//memory 
-		auto pSensor = new CSensorMemory;
-		if (pSensor)
-		{
-			m_sensors.push_back(pSensor);
-			m_pViewer->add_sensor(pSensor);
-		}else return false;
-	}
+	if (auto pSensor{ std::make_unique<CSensorMemory>() })//memory 
+	{
+		m_pViewer->add_sensor(pSensor.get());
+		m_sensors.push_back(std::move(pSensor));
+	};
 
-	{//disk
-		auto pSensor = new CSensorDisk;
-		if (pSensor)
+	if (auto pSensor{ std::make_unique<CSensorDisk>() })//disk
+		if (pSensor->init(_T("c:\\")))
 		{
-			m_sensors.push_back(pSensor);
-			if (pSensor->init(_T("c:\\")))
-				m_pViewer->add_sensor(pSensor);
-			else return false;
-		}else return false;
-	}
+			m_pViewer->add_sensor(pSensor.get());
+			m_sensors.push_back(std::move(pSensor));
+		}
 
-	{//network
-		auto pSensor = new CSensorNetwork;
-		if (pSensor)
+	if (auto pSensor{ std::make_unique<CSensorNetwork>() })//network
+		if (pSensor->init())
 		{
-			m_sensors.push_back(pSensor);
-			if (pSensor->init())		
-				m_pViewer->add_sensor(pSensor);
-			else return false;
-		}else return false;
-	}
+			m_pViewer->add_sensor(pSensor.get());
+			m_sensors.push_back(std::move(pSensor));
+		}
 	return true;
 }
 //---------------------------------------------------------------
 CsensorManager::~CsensorManager()
 {
 	done();
-	for (auto& sensor : m_sensors)
-		delete sensor, sensor = nullptr;
-	m_sensors.clear();
 }
 //---------------------------------------------------------------
 
