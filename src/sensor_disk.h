@@ -1,16 +1,15 @@
 #pragma once
 #include "sensor_mem.h"
-#include <atlstr.h>
 //---------------------------------------------------------------
+class CViewDisk;
 class CSensorDisk : public CSensorMemory
 {
 public:
+	using viewer_type = CViewDisk;
 	virtual void	read() override;
-	const bool		init(CString szDir);
-	LPCTSTR			dir() const { return m_szDir.GetString(); };
-	virtual LPCTSTR	name() override;			///name of the sensor (for notification)
+	const bool		init(tstring szDir);
+	const tstring	dir() const { return m_szDir; };
 private:
-	CString			m_szDir;
-	CString			m_name;
+	tstring			m_szDir;
 };
 //---------------------------------------------------------------

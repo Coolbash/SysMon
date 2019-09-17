@@ -24,9 +24,6 @@
     <ClInclude Include="res/Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\SysMonApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\SysMonView.h">
       <Filter>Header Files</Filter>
     </ClInclude>

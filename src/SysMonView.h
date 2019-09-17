@@ -82,6 +82,7 @@ private:
 	CBar			m_bar_received;
 };
 //---------------------------------------------------------------
+
 class CclientViewer	///class for incapsulating all sensor-viewers in client area
 {
 public:
@@ -91,33 +92,13 @@ public:
 	void	update();
 	void	done();
 
-
-//void	add_sensor(CSensorCPU* pSensor)
-//{
-//	m_sensor_veiwers.push_back(std::make_unique<CViewCPU>(*pSensor));
-//};
-
-//template<typename TSensor, typename TViewer>
-//void	add_sensor(TSensor* pSensor)
-//{
-//	m_sensor_veiwers.push_back(std::make_unique<TViewer>(*pSensor));
-//};
-
-
-
-#define ADD_SENSOR(sensor_t, viewer_t) \
-void	add_sensor(sensor_t* pSensor) \
-{\
-		m_sensor_veiwers.push_back(std::make_unique<viewer_t>(*pSensor));\
+template<typename TSensor>
+void	add_sensor(TSensor* pSensor)
+{
+	m_sensor_veiwers.emplace_back(std::make_unique<TSensor::viewer_type>(*pSensor));
 };
-//---------------------------------------------------------------
 
-	//void add_sensor(CSensorCPU)
 
-	ADD_SENSOR(CSensorCPU, CViewCPU);
-	ADD_SENSOR(CSensorMemory, CViewMem);
-	ADD_SENSOR(CSensorDisk, CViewDisk);
-	ADD_SENSOR(CSensorNetwork, CViewNetwork);
 
 	int							m_sensor_cx = 200;
 	int							m_sensor_cy = 50;

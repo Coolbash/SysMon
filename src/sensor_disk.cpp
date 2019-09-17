@@ -2,16 +2,11 @@
 #include "framework.h"
 #include "sensor_disk.h"
 //---------------------------------------------------------------
-LPCTSTR	CSensorDisk::name()
-{
-	return m_name.GetString();
-}
 //---------------------------------------------------------------
-//---------------------------------------------------------------
-const bool CSensorDisk::init(CString szDir)
+const bool CSensorDisk::init(tstring szDir)
 {
 	m_szDir = szDir;
-	m_name.Format(_T("Disk usage for \"%s\""),szDir);
+	m_name = _T("Disk usage for \"") + szDir + TCHAR('"');
 	read();
 	return m_valid;
 }
@@ -22,7 +17,7 @@ void CSensorDisk::read()
 	ULARGE_INTEGER FreeBytesAvailableToCaller;
 	ULARGE_INTEGER TotalNumberOfBytes;
 	ULARGE_INTEGER TotalNumberOfFreeBytes;
-	if (GetDiskFreeSpaceEx(m_szDir, &FreeBytesAvailableToCaller, &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
+	if (GetDiskFreeSpaceEx(m_szDir.c_str(), &FreeBytesAvailableToCaller, &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
 	{
 		m_total		= TotalNumberOfBytes.QuadPart;
 		m_used		= (TotalNumberOfBytes.QuadPart - TotalNumberOfFreeBytes.QuadPart);

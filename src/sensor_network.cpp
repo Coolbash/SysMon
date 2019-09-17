@@ -8,11 +8,6 @@
 #pragma comment(lib, "iphlpapi.lib")
 
 //---------------------------------------------------------------
-LPCTSTR	CSensorNetwork::name()
-{
-	return m_name.GetString();
-}
-//---------------------------------------------------------------
 const bool CSensorNetwork::init()
 {
 	//-----------------------
@@ -23,7 +18,9 @@ const bool CSensorNetwork::init()
 		m_receive_link_speed_bitPsec = ifRow.ReceiveLinkSpeed;
 		m_network_received = ifRow.InOctets;
 		m_network_transmitted = ifRow.OutOctets;
-		m_name.Format(_T("Network utilization of adapter\n%s\n"), ifRow.Alias);
+		tostringstream s;
+		s << _T("Network utilization of adapter\n") << ifRow.Alias << _T("\n");
+		m_name = s.str();
 	};
 	//-----------------------
 	LARGE_INTEGER perf_frequency;

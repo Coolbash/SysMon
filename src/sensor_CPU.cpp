@@ -2,19 +2,14 @@
 #include "sensor_CPU.h"
 
 //---------------------------------------------------------------
-LPCTSTR	CSensorCPU::name()
-{
-	return _T("CPU utilization");
-}
-//---------------------------------------------------------------
 const bool CSensorCPU::init()
 {
 	QueryIdleProcessorCycleTime(&m_CPU_idle_size, nullptr);
 	if (m_CPU_idle_size)
 	{
-		const int nCores = m_CPU_idle_size / sizeof ULONG64;
+		const auto nCores = m_CPU_idle_size / sizeof ULONG64;
 		m_cores.reserve(nCores);
-		if(m_cores.capacity()>=nCores)
+		if(m_cores.capacity() >= nCores)
 		{
 			m_cores.resize(nCores);
 			if(m_pCPU_idle = std::make_unique<ULONG64[]>(m_cores.size()))

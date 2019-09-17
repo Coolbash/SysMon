@@ -3,11 +3,6 @@
 #include "sensor_mem.h"
 
 //---------------------------------------------------------------
-LPCTSTR	CSensorMemory::name()
-{
-	return _T("memory utilization");
-}
-//---------------------------------------------------------------
 void CSensorMemory::read()
 {
 	MEMORYSTATUSEX mem = { sizeof(mem) };

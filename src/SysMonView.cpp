@@ -1,32 +1,30 @@
 #include "framework.h"
 #include "SysMonView.h"
-#include <atlstr.h>
 //---------------------------------------------------------------
-#define LOCK(mutex)		std::unique_lock<decltype(mutex)> lck(mutex,std::defer_lock); lck.lock();
 const LONG margin = 5;
 const LONG bar_weight = 10;
 //---------------------------------------------------------------
-CString btos(LONG64 b)	///converts bytes to string with kb-Mb-Gb-Tb
+tstring btots(LONG64 b)	///converts bytes to string with kb-Mb-Gb-Tb
 {
 	const LONG64 k = 1024;
 	const LONG64 M = k*k;
 	const LONG64 G = k*M;
 	const LONG64 T = k*G;
-	CString s;
-	if (b <= k)
-		s.Format(_T("%lld b"), b);
+	tostringstream s;
+	if ( b <= k )
+		s << b << _T(" b");
 	else
-		if (b <= M)
-			s.Format(_T("%lld kb"), (b + k / 2)/k);
+		if ( b <= M )
+			s << (b + k / 2)/k << _T(" kb");
 		else
-			if (b <= G)
-				s.Format(_T("%lld Mb"), (b + M / 2) / M);
+			if ( b <= G )
+				s << (b + M / 2) / M << _T(" Mb");
 			else
-				if (b <= T)
-					s.Format(_T("%lld Gb"), (b + G / 2) / G);
+				if ( b <= T )
+					s << (b + G / 2) / G << _T(" Gb");
 				else
-					s.Format(_T("%lld Tb"), (b + T / 2) / T);
-return s;
+					s << (b + T / 2) / T << _T(" Tb");
+	return s.str();
 }
 //---------------------------------------------------------------
 void CBar::init(LONG left, LONG top, LONG cx, LONG cy, COLORREF color)
@@ -95,9 +93,10 @@ void CViewCPU::draw(HDC hdc)
 		for (auto &core : m_sensor.data())
 			(bar++)->draw(hdc, core.m_utilization);
 	}
-	CString		s;
-	s.Format(_T("CPU %d%%"), m_sensor.value_percents());
-	DrawText(hdc, s.GetString(), -1, &m_rect_text, DT_LEFT );
+
+	tostringstream	s;
+	s << _T("CPU ") << m_sensor.value_percents() << _T("%%");
+	DrawText(hdc, s.str().c_str(), -1, &m_rect_text, DT_LEFT );
 }
 //---------------------------------------------------------------
 bool CViewMem::init()
@@ -115,11 +114,8 @@ bool CViewMem::init()
 void CViewMem::draw(HDC hdc)
 {
 	m_bar.draw(hdc, m_sensor.value());
-	CString		s;
-	s.Format(_T("Memory:\navailable %s of %s"), 
-		btos(m_sensor.available()).GetString(), 
-		btos(m_sensor.total()).GetString());
-	DrawText(hdc, s.GetString(), -1, &m_rect_text, DT_LEFT);
+	tstring	s{_T("Memory:\navailable ") + btots(m_sensor.available()) + _T(" of ") + btots(m_sensor.total()) };
+	DrawText(hdc, s.c_str(), -1, &m_rect_text, DT_LEFT);
 }
 //---------------------------------------------------------------
 bool CViewDisk::init()
@@ -137,13 +133,8 @@ bool CViewDisk::init()
 void CViewDisk::draw(HDC hdc)
 {
 	m_bar.draw(hdc, m_sensor.value());
-	CString		s;
-	s.Format(_T("Directory \"%s\"\nused %s of %s\navailable %s"), 
-		m_sensor.dir(), 
-		btos(m_sensor.used()).GetString(), 
-		btos(m_sensor.total()).GetString(), 
-		btos(m_sensor.available()).GetString());
-	DrawText(hdc, s.GetString(), -1, &m_rect_text, DT_LEFT);
+	tstring s{ _T("Directory \"") + m_sensor.dir() + _T("\nused ") + btots(m_sensor.used()) +_T(" of ") + btots(m_sensor.total()) + _T("\navailable " )+ btots(m_sensor.available()) };
+	DrawText(hdc, s.c_str(), -1, &m_rect_text, DT_LEFT);
 }
 //---------------------------------------------------------------
 
@@ -164,19 +155,14 @@ void CViewNetwork::draw(HDC hdc)
 {
 	m_bar_sent.draw(hdc, m_sensor.utilization_transmit());
 	m_bar_received.draw(hdc, m_sensor.utilization_receive());
-	CString szLinkSpeed, s;
+	tstring szLinkSpeed;
 	if (m_sensor.is_link_simmetrical())
-		szLinkSpeed.Format(_T("%sit"), btos(m_sensor.link_speed_receive_bitPsec()).GetString());
+		szLinkSpeed = btots(m_sensor.link_speed_receive_bitPsec()) + _T("it");
 	else
-		szLinkSpeed.Format(_T("transmit %sit, receive %sit"),
-			btos(m_sensor.link_speed_transmit_bitPsec()).GetString(), 
-			btos(m_sensor.link_speed_receive_bitPsec()).GetString());
-	s.Format(_T("Network (%s):\nsent: %s\nreceived: %s"), 
-		szLinkSpeed.GetString(), 
-		btos(m_sensor.sent_since_byte()).GetString(), 
-		btos(m_sensor.received_since_byte()).GetString());
-
-	DrawText(hdc, s.GetString(), -1, &m_rect_text, DT_LEFT);
+		szLinkSpeed =_T("transmit ") + btots(m_sensor.link_speed_transmit_bitPsec()) +_T("it, receive ") + btots(m_sensor.link_speed_receive_bitPsec()) +_T("it");
+	
+	tstring s{_T("Network (") + szLinkSpeed +_T("):\nsent: ") + btots(m_sensor.sent_since_byte()) +_T("\nreceived: ") + btots(m_sensor.received_since_byte()) +_T("")};
+	DrawText(hdc, s.c_str(), -1, &m_rect_text, DT_LEFT);
 }
 //---------------------------------------------------------------
 
@@ -184,14 +170,14 @@ void CViewNetwork::draw(HDC hdc)
 //---------------------------------------------------------------
 void CclientViewer::done()
 {
-	LOCK(m_mutex);
+	std::unique_lock lck{m_mutex};
 	m_sensor_veiwers.clear();
 }
 
 //---------------------------------------------------------------
 bool CclientViewer::init(HWND hWnd)
 {
-	LOCK(m_mutex);
+	std::unique_lock lck{ m_mutex };
 	m_hWnd = hWnd;
 
 	//positioning of elements
@@ -215,7 +201,7 @@ bool CclientViewer::init(HWND hWnd)
 //---------------------------------------------------------------
 void CclientViewer::draw(HDC hdc)
 {
-	LOCK(m_mutex);	//might be called from different threads
+	std::unique_lock lck{ m_mutex }; //might be called from different threads
 	//erase background
 	SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));
 	RECT rect;
@@ -225,7 +211,6 @@ void CclientViewer::draw(HDC hdc)
 	//draw all sensors
 	for (auto& viewer : m_sensor_veiwers)
 		viewer->draw(hdc);
-
 }
 //---------------------------------------------------------------
 void CclientViewer::update()

@@ -3,7 +3,6 @@
 #include "sensor_disk.h"
 #include "sensor_network.h"
 #include "SysMonView.h"
-#include <atlstr.h>
 #include <thread>
 #include <vector>
 #include <memory>
@@ -24,7 +23,7 @@ private:
 	std::vector<std::unique_ptr<CSensor>>		m_sensors;
 	std::thread					m_thread_worker;	///a background working thread that checks all sensors and shows notifications
 	std::thread					m_thread_message;	///different thread for notification window
-	CString						m_szNotification;	///user notification text
+	tstring						m_szNotification;	///user notification text
 	DWORD						m_inteval_ms=1000;	///interval of sensor checking in milliseconds
 
 	void						read_ini_section(CiniReader& reader);

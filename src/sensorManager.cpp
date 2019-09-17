@@ -1,9 +1,9 @@
 #include "framework.h"
 #include "sensorManager.h"
-#include <string>
+//#include <string>
 #include <fstream>
 #include <algorithm>
-
+//#include <sstream>
 //---------------------------------------------------------------
 class CiniReader : public std::ifstream		///small utility class for reading ini-file liny-by-line
 {
@@ -86,9 +86,8 @@ void	CsensorManager::read_ini_section(CiniReader& reader)
 				else
 				{
 					//unknown ini_section
-					CString szMsg;
-					szMsg.Format(_T("Unknown section \"%S\"in config file"), reader.name.c_str());
-					MessageBox(NULL, szMsg.GetString(), _T("Error"), MB_OK | MB_ICONSTOP);
+					std::string msg{"Unknown section \"" + reader.name + "\" in config file"};
+					MessageBox(NULL, tstring(msg.begin(),msg.end()).c_str(), _T("Error"), MB_OK | MB_ICONSTOP);
 					while (reader.get_next_line() && !reader.section);
 				}
 
@@ -151,7 +150,7 @@ bool	CsensorManager::add_sensor_disk(CiniReader& reader)
 					pSensor->m_threshold_warning = std::stoi(reader.value) / 100.;
 				else
 					if (reader.name == ini_directory)
-						pSensor->init(CString(reader.value.c_str()));
+						pSensor->init({reader.value.begin(), reader.value.end()});
 		}
 		m_sensors.push_back(std::move(pSensor));
 		return true;
@@ -202,27 +201,27 @@ bool CsensorManager::init_default()
 		if (pSensor->init())
 		{
 			m_pViewer->add_sensor(pSensor.get());
-			m_sensors.push_back(std::move(pSensor));
+			m_sensors.emplace_back(std::move(pSensor));
 		};
 	
 	if (auto pSensor{ std::make_unique<CSensorMemory>() })//memory 
 	{
 		m_pViewer->add_sensor(pSensor.get());
-		m_sensors.push_back(std::move(pSensor));
+		m_sensors.emplace_back(std::move(pSensor));
 	};
 
 	if (auto pSensor{ std::make_unique<CSensorDisk>() })//disk
 		if (pSensor->init(_T("c:\\")))
 		{
 			m_pViewer->add_sensor(pSensor.get());
-			m_sensors.push_back(std::move(pSensor));
+			m_sensors.emplace_back(std::move(pSensor));
 		}
 
 	if (auto pSensor{ std::make_unique<CSensorNetwork>() })//network
 		if (pSensor->init())
 		{
 			m_pViewer->add_sensor(pSensor.get());
-			m_sensors.push_back(std::move(pSensor));
+			m_sensors.emplace_back(std::move(pSensor));
 		}
 	return true;
 }
@@ -267,14 +266,14 @@ LPCTSTR		szNotificationCaption = _T("threshold exceeded");
 void CsensorManager::thread_message()
 {
 	bool confirmed = false;
-	if (MessageBox(NULL, m_szNotification.GetString(), szNotificationCaption, MB_OKCANCEL | MB_ICONINFORMATION) == IDOK)
+	if (MessageBox(NULL, m_szNotification.c_str(), szNotificationCaption, MB_OKCANCEL | MB_ICONINFORMATION) == IDOK)
 	{
 		for (auto& sensor : m_sensors)//read all sensors
 		{
 			switch (sensor->threshold_state())
 			{
-			case threshold_error:
-			case threshold_warning: 
+				case threshold_state_t::error:
+				case threshold_state_t::warning:
 				sensor->threshold_confirm();
 			}
 		}
@@ -293,21 +292,32 @@ void	CsensorManager::close_notification()
 void	CsensorManager::show_notification()
 {
 	close_notification();//closing notification if it was shown
-	m_szNotification.Empty();
+	//m_szNotification.Empty();
+	m_szNotification.clear();
 	for (auto& sensor : m_sensors)//read all sensors
 	{
 		switch (sensor->threshold_state())
 		{
-		case threshold_error	: 
+		case threshold_state_t::error	:
 			if(!sensor->is_threshold_confirmed()) 
-				m_szNotification.AppendFormat(_T("sensor %s has exceeded error level\n"), sensor->name()); 
+			{
+				m_szNotification += _T("sensor ");
+				m_szNotification += sensor->name();
+				m_szNotification += _T(" has exceeded error level\n");
+				//m_szNotification.AppendFormat(_T("sensor %s has exceeded error level\n"), sensor->name());
+			}
 			break;
-		case threshold_warning	: 
+		case threshold_state_t::warning	:
 			if (!sensor->is_threshold_confirmed())
-				m_szNotification.AppendFormat(_T("sensor %s has exceeded warning level\n"), sensor->name());
+			{
+				m_szNotification += _T("sensor ");
+				m_szNotification += sensor->name();
+				m_szNotification += _T(" has exceeded warning level\n");
+				//m_szNotification.AppendFormat(_T("sensor %s has exceeded warning level\n"), sensor->name());
+			}
 		}
 	}
-	if(!m_szNotification.IsEmpty())
+	if(!m_szNotification.empty())
 		m_thread_message = std::thread(&CsensorManager::thread_message, this);
 }
 //---------------------------------------------------------------
